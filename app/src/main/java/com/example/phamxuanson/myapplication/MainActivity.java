@@ -8,6 +8,7 @@ import android.support.v4.app.FragmentManager;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -16,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.support.v4.widget.DrawerLayout;
 import android.widget.ArrayAdapter;
+import android.widget.TabHost;
 import android.widget.TextView;
 
 
@@ -52,9 +54,9 @@ public class MainActivity extends ActionBarActivity
     public void onNavigationDrawerItemSelected(int position) {
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
-//        fragmentManager.beginTransaction()
-//                .replace(R.id.container, PlaceholderFragment.newInstance(position + 1))
-//                .commit();
+        fragmentManager.beginTransaction()
+                .replace(R.id.container, PlaceholderFragment.newInstance(position + 1))
+                .commit();
     }
 
     public void onSectionAttached(int number) {
@@ -115,13 +117,21 @@ public class MainActivity extends ActionBarActivity
          * The fragment argument representing the section number for this
          * fragment.
          */
+
+        private View mRoot;
+        private TabHost mTabHost;
+        private int mCurrentTab;
         private static final String ARG_SECTION_NUMBER = "section_number";
+        public static final String TAB_WORDS = "words";
+        public static final String TAB_NUMBERS = "numbers";
+        private static int position = 0;
 
         /**
          * Returns a new instance of this fragment for the given section
          * number.
          */
         public static PlaceholderFragment newInstance(int sectionNumber) {
+            position = sectionNumber;
             PlaceholderFragment fragment = new PlaceholderFragment();
             Bundle args = new Bundle();
             args.putInt(ARG_SECTION_NUMBER, sectionNumber);
@@ -135,8 +145,32 @@ public class MainActivity extends ActionBarActivity
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            return rootView;
+            mRoot = inflater.inflate(R.layout.tabs_fragment, null);
+            mTabHost = (TabHost) mRoot.findViewById(android.R.id.tabhost);
+            if(position != 1){
+                setupTabs();
+            }
+            return mRoot;
+        }
+
+        private void setupTabs() {
+            mTabHost.setup(); // you must call this before adding your tabs!
+            mTabHost.addTab(newTab(TAB_WORDS, R.string.tab_words, R.id.tab_1));
+            mTabHost.addTab(newTab(TAB_NUMBERS, R.string.tab_numbers, R.id.tab_2));
+        }
+
+        private TabHost.TabSpec newTab(String tag, int labelId, int tabContentId) {
+            Log.d("ANDROID LOG", "buildTab(): tag=" + tag);
+
+            View indicator = LayoutInflater.from(getActivity()).inflate(
+                    R.layout.tab,
+                    (ViewGroup) mRoot.findViewById(android.R.id.tabs), false);
+            ((TextView) indicator.findViewById(R.id.text)).setText(labelId);
+
+            TabHost.TabSpec tabSpec = mTabHost.newTabSpec(tag);
+            tabSpec.setIndicator(indicator);
+            tabSpec.setContent(tabContentId);
+            return tabSpec;
         }
 
         @Override
